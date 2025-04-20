@@ -3,44 +3,61 @@ import requests
 from flask import Flask, render_template, request
 from dotenv import load_dotenv
 
-load_dotenv()  # reads .env in project root
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 
-@app.route('/', methods=['GET', 'POST'])
+def get_weather(city: str):
+    """
+    Fetch weather data for `city` from OpenWeatherMap.
+    Returns a dict with temp, desc, humidity or None if not found.
+    """
+    api_key = os.getenv("API_KEY")
+    if not api_key:
+        raise RuntimeError("Missing API_KEY in environment")
+
+    url = (
+        "https://api.openweathermap.org/data/2.5/weather"
+        f"?q={city}&appid={api_key}&units=metric"
+    )
+    resp = requests.get(url)
+    data = resp.json()
+
+    if resp.status_code != 200 or "main" not in data:
+        return None
+
+    return {
+        "temp": data["main"]["temp"],
+        "desc": data["weather"][0]["description"],
+        "humidity": data["main"]["humidity"],
+    }
+
+
+@app.route("/", methods=["GET", "POST"])
 def index():
     weather = None
     error = None
 
-    if request.method == 'POST':
-        city = request.form.get('city', '').strip()
+    if request.method == "POST":
+        city = request.form.get("city", "").strip()
         if not city:
             error = "Please enter a city name."
         else:
-            api_key = os.getenv('API_KEY')
-            if not api_key:
-                error = "API_KEY not set in environment."
+            try:
+                result = get_weather(city)
+            except RuntimeError as e:
+                error = str(e)
             else:
-                # Call OpenWeatherMap API
-                url = (
-                  f"http://api.openweathermap.org/data/2.5/weather"
-                  f"?q={city}&appid={api_key}&units=metric"
-                )
-                resp = requests.get(url).json()
-                if resp.get('main'):
-                    weather = {
-                        'city': city,
-                        'temperature': resp['main']['temp'],
-                        'description': resp['weather'][0]['description'],
-                        'humidity': resp['main']['humidity']
-                    }
+                if result:
+                    weather = result
                 else:
-                    # show API error message if provided
-                    error = resp.get('message', 'City not found.')
+                    error = "City not found."
 
-    return render_template('index.html', weather=weather, error=error)
+    return render_template("index.html", weather=weather, error=error)
 
-if __name__ == '__main__':
-    # pick up PORT from env (Render/Heroku sets this), default 5000
-    port = int(os.getenv('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+
+if __name__ == "__main__":
+    # Heroku/Render will set PORT; default to 5000 locally
+    port = int(os.getenv("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
