@@ -11,7 +11,12 @@ app = Flask(__name__)
 def get_weather(city: str):
     """
     Fetch weather data for `city` from OpenWeatherMap.
-    Returns a dict with temp, desc, humidity or None if not found.
+    Returns a dict with keys:
+      - city
+      - temperature
+      - description
+      - humidity
+    or None if not found / error.
     """
     api_key = os.getenv("API_KEY")
     if not api_key:
@@ -24,15 +29,17 @@ def get_weather(city: str):
     resp = requests.get(url)
     data = resp.json()
 
+    # If API returns an error or missing data
     if resp.status_code != 200 or "main" not in data:
         return None
 
+    # Successful response
     return {
-        "temp": data["main"]["temp"],
-        "desc": data["weather"][0]["description"],
+        "city": city,
+        "temperature": data["main"]["temp"],
+        "description": data["weather"][0]["description"],
         "humidity": data["main"]["humidity"],
     }
-
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -56,8 +63,7 @@ def index():
 
     return render_template("index.html", weather=weather, error=error)
 
-
 if __name__ == "__main__":
-    # Heroku/Render will set PORT; default to 5000 locally
+    # Use PORT from environment (Heroku/Render), default to 5000 for local
     port = int(os.getenv("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
