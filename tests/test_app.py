@@ -17,8 +17,8 @@ def test_get_weather_success(monkeypatch):
     monkeypatch.setattr("requests.get", lambda *a, **k: dummy)
     os.environ["API_KEY"] = "fake"
     result = get_weather("London")
-    assert result["temp"] == 22
-    assert result["desc"] == "clear sky"
+    assert result["temperature"] == 22
+    assert result["description"] == "clear sky"
 
 def test_get_weather_fail(monkeypatch):
     # Simulate 404 Not Found
