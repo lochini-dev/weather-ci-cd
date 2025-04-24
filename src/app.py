@@ -42,7 +42,26 @@ def get_weather(city: str):
     }
 
 @app.route("/", methods=["GET", "POST"])
+def index():
+    weather = None
+    error = None
 
+    if request.method == "POST":
+        city = request.form.get("city", "").strip()
+        if not city:
+            error = "Please enter a city name."
+        else:
+            try:
+                result = get_weather(city)
+            except RuntimeError as e:
+                error = str(e)
+            else:
+                if result:
+                    weather = result
+                else:
+                    error = "City not found."
+
+    return render_template("index.html", weather=weather, error=error)
 
 if __name__ == "__main__":
     # Use PORT from environment (Heroku/Render), default to 5000 for local
