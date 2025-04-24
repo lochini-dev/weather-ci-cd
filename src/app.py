@@ -23,7 +23,7 @@ def get_weather(city: str):
         raise RuntimeError("Missing API_KEY in environment")
 
     url = (
-        ""
+        "https://api.openweathermap.org/data/2.5/weather"
         f"?q={city}&appid={api_key}&units=metric"
     )
     resp = requests.get(url)
