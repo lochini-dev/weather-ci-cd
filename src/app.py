@@ -61,7 +61,7 @@ def index():
                 else:
                     error = "City not found."
 
-    return render_template("index.html", weather=weather, error=error)
+    return render_template("index.html", weather=sun, error=error)
 
 if __name__ == "__main__":
     # Use PORT from environment (Heroku/Render), default to 5000 for local
