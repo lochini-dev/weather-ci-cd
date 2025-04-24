@@ -50,7 +50,6 @@ def index():
         city = request.form.get("city", "").strip()
         if not city:
             error = "Please enter a city name."
-get sun
         else:
             try:
                 result = get_weather(city)
